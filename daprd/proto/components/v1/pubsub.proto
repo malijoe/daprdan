@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package daprd.proto.components.v1;
+
+import "daprd/proto/components/v1/common.proto";
+
+option go_package = "github.com/malijoe/daprdan/pkg/proto/components/v1;components";
+
+// PubSub service provides a gRPC interface for pubsub components.
+service PubSub {
+    // Initializes the pubsub component with the given metadata.
+    rpc Init(PubSubInitRequest) returns (PubSubInitResponse) {}
+
+    // Returns a list of implemented pubsub features.
+    rpc Features(FeaturesRequest) returns (FeaturesResponse) {}
+
+    // Publish publishes a new message for the given topic.
+    rpc Publish(PublishRequest) returns (PublishResponse) {}
+
+    // Establishes a stream with the server (PubSub component), which sends 
+    // messages dow to the client (daprdd). The client streams acknowledgements
+    // back to the server. The server will close the stream and return the status
+    // on any error. In case of closed connection, the client should re-establish
+    // the stream. The first message MUST contain a `topic` attributes on it that 
+    // should be used for the entire streaming pull.
+    rpc PullMessages(stream PullMessagesRequest)
+        returns (stream PullMessagesResponse) {}
+
+    // Ping the pubsub. Used for livenes purposes.
+    rpc Ping(PingRequest) returns (PingResponse) {}
+}
+
+// Used for describing errors when ack'ing messages.
+message AckMessageError {
+    string message = 1;
+}
+
+// Used for ack'ing a message.
+message PullMessagesRequest {
+    // Required. The subscribed topic for which to initialize the new stream. This 
+    // must be provided in the first request on the stream, and must not be set in
+    // subsequent requests from client to server.
+    Topic topic = 1;
+    // The unique message ID.
+    string ack_message_id = 2;
+    // Optional. should not be fulfilled when the message was successfully
+    // handled.
+    AckMessageError ack_error = 3;
+}
+
+// PubSubInitRequest is the request for initializing the pubsub component.
+message PubSubInitRequest {
+    // The metadata request.
+    MetadataRequest metadata = 1;
+}
+
+// reserved for future-proof extensibility
+message PubSubInitResponse {}
+
+message PublishRequest {
+    bytes data = 1;
+    // The pubsub name.
+    string pubsub_name = 2;
+    // The publishing topic.
+    string topic = 3;
+    // message metadata.
+    map<string, string> metadata = 4;
+    // The data content type.
+    string content_type = 5;
+}
+
+// reserved for future-proof extensibility
+message PublishResponse {}
+
+message Topic {
+    // The topic name desired to be subscribed
+    string name = 1;
+    // Metadata related subscribe request.
+    map<string, string> metadata = 2;
+}
+
+message PullMessagesResponse {
+    // The message content.
+    bytes data = 1;
+    // The topic where the message came from.
+    string topic_name = 2;
+    // The message related metadata.
+    map<string, string> metadata = 3;
+    // The message content type.
+    string content_tpye = 4;
+    // The message {transient} ID. It's used for ack'ing it later.
+    string id = 5;
+}

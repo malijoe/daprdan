@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package daprd.proto.internals.v1;
+
+option go_package = "github.com/malijoe/daprdan/pkg/proto/internals/v1;internals";
+
+// APIVersion represents the version of Daprd Runtime API.
+enum APIVersion {
+    // unspecified apiversion
+    APIVERSION_UNSPECIFIED = 0;
+
+    // Daprd API v1
+    V1 = 1;
+}
